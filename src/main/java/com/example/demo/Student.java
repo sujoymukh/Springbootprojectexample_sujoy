@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-@Entity(name="studentdb")
-@Table(name ="student")
+@Entity(name="studentDb")
+//@Table(name ="message")
 
 public class Student {
 	@Id

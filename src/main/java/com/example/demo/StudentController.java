@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/Student")
 public class StudentController {
-	
+	public static final Logger logger = LoggerFactory.getLogger(StudentController.class);
 	@Autowired
 	StudentService s;
 
@@ -34,23 +37,39 @@ public class StudentController {
 	
 	
 	@GetMapping("/getallstudent") 
-	public Iterable<Student> student()
+	public ResponseEntity<Iterable<Student>> student()
 	{
 		
 		Iterable<Student> std= s.getStudentList();
-		return std;
+		 if (std==null) {
+	            return new ResponseEntity<Iterable<Student>>(HttpStatus.NO_CONTENT);
+		//return std;
+		 }
+		 return new ResponseEntity<Iterable<Student>>(std, HttpStatus.OK);
 	}
+		 
 
 
   @GetMapping("/getstudentbyid/{studentId}") 
-  public Optional<Student> retrieveStudent(@PathVariable Long studentId )
+  public ResponseEntity<Optional<Student>> retrieveStudent(@PathVariable Long studentId )
   {
-	  return s.retrieveStudent(studentId); 
+	  if (s == null) {
+          logger.error("User with id {} not found.", studentId);
+          return new ResponseEntity(new CustomErrorType("User with id " + studentId 
+                  + " not found"), HttpStatus.NOT_FOUND);
+      }
+	  return new ResponseEntity<Optional<Student>>( s.retrieveStudent(studentId),HttpStatus.OK); 
 			  
   }
   @DeleteMapping("/deletestudent/{id}")
-  public void deleteStudent(@PathVariable Long id) {
+  public ResponseEntity <?>  deleteStudent(@PathVariable Long id) {
+	  if (s == null) {
+          logger.error("Unable to delete. User with id {} not found.", id);
+          return new ResponseEntity(new CustomErrorType("Unable to delete. User with id " + id + " not found."),
+                  HttpStatus.NOT_FOUND);
+	  }
   	s.deleteById(id);
+  	return new ResponseEntity<Student>(HttpStatus.NO_CONTENT);
   }
   @PutMapping("/updatestudent")
   public Student updateStudent(@RequestBody Student student)
